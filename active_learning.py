@@ -5,11 +5,13 @@ from sklearn.svm import SVC
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_score
 import os
+from math import exp
 
 
 dropbox_dir = os.path.expanduser("~/Dropbox/ActiveLearningBackup/")
 
 _lambda = 0.5
+_gamma = 0.0008
 
 def main():
 	print(dropbox_dir)
@@ -27,13 +29,18 @@ def main():
 	y_test = np.concatenate(y_test)
 
 
+	'''
 	active_learning_step = 0
 
-	model = SVC(gamma=0.0008)
+	model = SVC(kernel='rbf', gamma=_gamma)
 
 	model.fit(x_init[:1000],y_init[:1000])
 
 	evaluate_model(model,active_learning_step,x_test,y_test)
+
+	'''
+
+	print(get_average_cos(x_query))
 
 def evaluate_model(model,learning_step, x_test, y_test):
 	pickle.dump(model, open(dropbox_dir+'model_{}.pkl'.format(learning_step),'wb'))
@@ -64,6 +71,33 @@ def get_query_index(model, batch_added, avg_cos, x_query):
 	for i in range(len(x_query)):
 		if batch_added[i]:
 			continue
+		sum = 0
+		for feature_vec in x_query[i]:
+			sum += abs(model.decision_function(feature_vec))
+		avg_dist = sum / len(x_query[i])
+		score = _lambda * avg_dist + (1-_lambda) * avg_cos[i]
+		if(score < min_score):
+			min_score = score
+			min_index = i
+	return min_index
+
+def get_average_cos(x_query):
+	avg_cos = np.zeros(len(x_query))
+	for b in range(len(x_query)):
+		batch = x_query[b]
+		batch_cos = np.zeros(len(batch))
+		for i in range(len(batch)):
+			for j in range(i+1, len(batch)):
+				vector_a = batch[i]
+				vector_b = batch[j]
+				cos = exp(-_gamma * np.sum((vector_a-vector_b)**2))
+				batch_cos[i] = max(batch_cos[i], cos)
+				batch_cos[j] = max(batch_cos[j], cos)
+		avg_cos[b] = np.average(batch_cos)
+	return avg_cos
+
+
+
 
 
 
