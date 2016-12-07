@@ -13,34 +13,65 @@ dropbox_dir = os.path.expanduser("~/Dropbox/ActiveLearningBackup/")
 _lambda = 0.5
 _gamma = 0.0008
 
+eval_path = dropbox_dir+'eval.txt'
+query_path = dropbox_dir+'query.txt'
+
 def main():
 	print(dropbox_dir)
-	x_init , y_init = pickle.load(open('data/init.pkl','rb'))
+	x_train , y_train = pickle.load(open('data/init.pkl','rb'))
 
 	x_query, y_query = pickle.load(open('data/query.pkl','rb'))
 
 	x_test, y_test = pickle.load(open('data/test.pkl','rb'))
 
 
-	x_init = np.concatenate(x_init)
-	y_init = np.concatenate(y_init)
+	x_train = np.concatenate(x_train)
+	y_train = np.concatenate(y_train)
 
 	x_test = np.concatenate(x_test)
 	y_test = np.concatenate(y_test)
 
 
-	'''
+
 	active_learning_step = 0
 
 	model = SVC(kernel='rbf', gamma=_gamma)
 
-	model.fit(x_init[:1000],y_init[:1000])
+	model.fit(x_train,y_train)
+	evaluate_model(model,active_learning_step,x_test, y_test)
 
-	evaluate_model(model,active_learning_step,x_test,y_test)
 
-	'''
+	batch_cos = get_batch_cos(x_query)
 
-	print(get_average_cos(x_query))
+	batch_added = np.zeros(len(x_query))
+
+	with open(eval_path,'w') as eval_f:
+		eval_f.write('precision,recall,f1,roc\n')
+
+	with open(query_path,'w') as query_f:
+		query_f.write('query_index\n')
+
+
+
+	while active_learning_step <= len(x_query):
+		active_learning_step += 1
+		print("Running active learning step ", active_learning_step, 'of', len(x_query))
+		print("Selecting next batch")
+		query_index = get_query_index(model,batch_added,batch_cos,x_query)
+		print("Selected query batch:", query_index)
+		with open(query_path,'a') as query_f:
+			query_f.write('{}\n'.format(query_index))
+
+		x_train = np.concatenate([x_train,x_query[query_index]])
+		y_train = np.concatenate([y_train,y_query[query_index]])
+		batch_added[query_index] = True
+		model = model.fit(x_train,y_train)
+		evaluate_model(model,active_learning_step,x_test,y_test)
+
+
+
+
+
 
 def evaluate_model(model,learning_step, x_test, y_test):
 	pickle.dump(model, open(dropbox_dir+'model_{}.pkl'.format(learning_step),'wb'))
@@ -60,29 +91,32 @@ def evaluate_model(model,learning_step, x_test, y_test):
 
 	print("precision:", precision, "recall:" , recall , "f1:" , f1, "roc" , roc)
 
-	eval_f = open(dropbox_dir+'eval_{}'.format(learning_step), 'w')
-	eval_f.write('precision,recall,f1,roc\n')
-	eval_f.write('{},{},{},{}\n'.format(precision,recall,f1,roc))
-	eval_f.close()
+	with open(dropbox_dir+'eval_{}'.format(learning_step), 'w') as eval_f:
+		eval_f.write('{},{},{},{}\n'.format(precision,recall,f1,roc))
 
-def get_query_index(model, batch_added, avg_cos, x_query):
-	min_score = 999
-	min_index = -1
+def get_query_index(model, batch_added, batch_cos, x_query):
+	max_score = -999
+	max_index = -1
 	for i in range(len(x_query)):
+		batch = x_query[i]
 		if batch_added[i]:
 			continue
-		sum = 0
-		for feature_vec in x_query[i]:
-			sum += abs(model.decision_function(feature_vec))
-		avg_dist = sum / len(x_query[i])
-		score = _lambda * avg_dist + (1-_lambda) * avg_cos[i]
-		if(score < min_score):
-			min_score = score
-			min_index = i
-	return min_index
 
-def get_average_cos(x_query):
-	avg_cos = np.zeros(len(x_query))
+		dist = np.abs(model.decision_function(batch))
+		mask = dist < 1
+
+		dist_score = np.sum(1 - dist[mask])
+		cos_score = np.sum(1- batch_cos[i][mask])
+
+
+		score = _lambda * dist_score + (1-_lambda) * cos_score
+		if(score > max_score):
+			max_score = score
+			max_index = i
+	return max_index
+
+def get_batch_cos(x_query):
+	batch_cosines = []
 	for b in range(len(x_query)):
 		batch = x_query[b]
 		batch_cos = np.zeros(len(batch))
@@ -93,8 +127,8 @@ def get_average_cos(x_query):
 				cos = exp(-_gamma * np.sum((vector_a-vector_b)**2))
 				batch_cos[i] = max(batch_cos[i], cos)
 				batch_cos[j] = max(batch_cos[j], cos)
-		avg_cos[b] = np.average(batch_cos)
-	return avg_cos
+		batch_cosines.append(batch_cos)
+	return batch_cosines
 
 
 
@@ -103,42 +137,7 @@ def get_average_cos(x_query):
 
 
 
-'''
-print("fitting model")
 
-before = time.time()
-
-model = model.fit(train_x, train_y)
-
-after = time.time()
-
-
-print('fitted model:',  float(after-before) / 60.0 , "minutes")
-
-print("predicting")
-
-before = time.time()
-pred = model.predict(test_x)
-print(pred)
-
-precision = precision_score(y_true=test_y, y_pred=pred)
-recall = recall_score(y_true=test_y,y_pred=pred)
-f1 = f1_score(test_y,pred)
-
-print("precision:", precision, "recall:" , recall , "f1:" , f1)
-
-scores = model.decision_function(test_x)
-
-roc = roc_auc_score(test_y,scores)
-
-print("ROC score:" ,roc)
-
-after = time.time()
-
-print("scoring took " , float(after - before) / 60.0 , 'minutes')
-
-pickle.dump(model,open('models/model_init.pkl', 'wb'))
-'''
 
 if __name__=='__main__':
 	main()
