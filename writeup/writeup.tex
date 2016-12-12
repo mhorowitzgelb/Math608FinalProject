@@ -10,8 +10,22 @@
 \section*{Abstract}
 DBSI is a structure based method for predicting the positions of protein interaction sites associated with DNA binding \cite{dbsi}. Here I present a method for applying active learning to the training of DBSI. This method optimizes the training of DBSI in a way that considers the batch style form of labelled data collection necessary when creating a training set. This method shows slight improvements in efficiency in comparison to naive methods. 
 \section*{Introduction}
-For area under an ROC curve, DBSI has been shown to achieve $~88\%$, a high degree of separability. The score was achieved by training DBSI on a set of 263 unique proteins. The model as a result of this training is now accessible to anyone on a public server \cite{dbsi_server}. The quality of this model could be improved further by training with more labelled data.  
+For area under an ROC curve, DBSI has been shown to achieve $~88\%$, a high degree of separability. The score was achieved by training DBSI on a set of 263 unique proteins. The model as a result of this training is now accessible to anyone on a public server \cite{dbsi_server}. The quality of this model could be improved further by training with more labelled data. But to collect more data practically we need to address practical issues.
+\subsection*{Necessity for Active Learning}
+Unlike learning on data generated from sensors or internet activity, aquiring labelled data for DBSI requires considerable time and energy. Experiments must be done to probe each protein for interaction sites.
+
+\textbf{Find out how protein complexes are aquired to emphasize lab work.}
+
+\subsection*{Neccessity for batch style active learning}
+Due to the way training data for DBSI is aquired, standard active learning methods are not appropriate. This is because each training point given to DBSI corresponds to one residue in a protein. Therefore each protein that is probed will give hundreds of new training points. Because of this we must query training points in batches as opposed to querying individual residues. This puts us in a unique situation where the batch with the most informative set training points as a whole may be different than the batch containing the one individually most informative training point. To address this issue I use a active learning querying method which scores batches rather than individual points in order to select the next query protein.
+
+     
 \section*{Methods}
+DBSI uses a support vector machine to classify residues. Such machine learning model has geometric properties that make applying active learning quite intuitive. 
+
+\subsection*{Non-Batch Active Learning SVM}
+
+
 \cite{active_learning}
 \section*{Results}
 \section*{Conclusion}
