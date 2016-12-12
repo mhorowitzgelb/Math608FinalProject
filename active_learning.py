@@ -1,8 +1,6 @@
-import time
 import pickle
 import numpy as np
 from sklearn.svm import SVC
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_score
 import os
 from math import exp
@@ -13,8 +11,10 @@ dropbox_dir = os.path.expanduser("~/Dropbox/ActiveLearningBackup/")
 _lambda = 0.5
 _gamma = 0.0008
 
-eval_path = dropbox_dir+'eval.txt'
-query_path = dropbox_dir+'query.txt'
+random_query = True
+
+eval_path = dropbox_dir+'eval' + ( '_random' if random_query else '') +'.txt'
+query_path = dropbox_dir+'query'+('_random' if random_query else '')+'.txt'
 
 def main():
 	print(dropbox_dir)
@@ -57,7 +57,7 @@ def main():
 		active_learning_step += 1
 		print("Running active learning step ", active_learning_step, 'of', len(x_query))
 		print("Selecting next batch")
-		query_index = get_query_index(model,batch_added,batch_cos,x_query)
+		query_index = get_random_query_index(batch_added) if random_query else get_query_index(model,batch_added,batch_cos,x_query)
 		print("Selected query batch:", query_index)
 		with open(query_path,'a') as query_f:
 			query_f.write('{}\n'.format(query_index))
@@ -73,8 +73,10 @@ def main():
 
 
 
+
+
 def evaluate_model(model,learning_step, x_test, y_test):
-	pickle.dump(model, open(dropbox_dir+'model_{}.pkl'.format(learning_step),'wb'))
+	pickle.dump(model, open(dropbox_dir+'model_{}'.format(learning_step) + ('_random.pkl' if random_query else '.pkl'),'wb'))
 	pred = model.predict(x_test)
 	print(pred)
 
@@ -91,7 +93,7 @@ def evaluate_model(model,learning_step, x_test, y_test):
 
 	print("precision:", precision, "recall:" , recall , "f1:" , f1, "roc" , roc)
 
-	with open(dropbox_dir+'eval_{}'.format(learning_step), 'w') as eval_f:
+	with open(eval_path, 'a') as eval_f:
 		eval_f.write('{},{},{},{}\n'.format(precision,recall,f1,roc))
 
 def get_query_index(model, batch_added, batch_cos, x_query):
@@ -115,6 +117,13 @@ def get_query_index(model, batch_added, batch_cos, x_query):
 			max_index = i
 	return max_index
 
+def get_random_query_index(batchAdded):
+	mask = batchAdded == 0
+	indices = np.array(range(len(batchAdded)))[mask]
+	return np.random.choice(indices)
+
+
+
 def get_batch_cos(x_query):
 	batch_cosines = []
 	for b in range(len(x_query)):
@@ -129,8 +138,6 @@ def get_batch_cos(x_query):
 				batch_cos[j] = max(batch_cos[j], cos)
 		batch_cosines.append(batch_cos)
 	return batch_cosines
-
-
 
 
 
