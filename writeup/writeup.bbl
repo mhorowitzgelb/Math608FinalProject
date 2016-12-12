@@ -1,3 +1,20 @@
-\begin{thebibliography}{}
+\begin{thebibliography}{1}
+
+\bibitem{active_learning}
+Brinker K.
+\newblock Incorporating diversity in active learning with support vector
+  machines.
+\newblock In {\em In Proceedings of the 20th International Conference on
+  Machine Learning}, pages 59--66. AAAI Press, 2003.
+
+\bibitem{dbsi_server}
+Sukamar S, Zhu X, Ericksen SS, and Mitchell JC.
+\newblock Dbsi server: Dna binding site identifier.
+\newblock {\em Bioinformatics}, 2016.
+
+\bibitem{dbsi}
+Zhu X, Ericksen E., and Mitchell JC.
+\newblock Dbsi: Dna-binding site identifier.
+\newblock {\em Nucleic Acids Research}, 2013.
 
 \end{thebibliography}
