@@ -6,6 +6,12 @@ Scholkopf B and Smola AJ.
   optimization, and beyond.
 \newblock 2002.
 
+\bibitem{displar}
+Tjong H and Zhou HX.
+\newblock {DISPLAR}: an accurate method for predicting dna-binding sites on
+  protein surfaces.
+\newblock {\em Nucleic Acids Research}, 35:1465--1477, 2007.
+
 \bibitem{active_learning}
 Brinker K.
 \newblock Incorporating diversity in active learning with support vector
