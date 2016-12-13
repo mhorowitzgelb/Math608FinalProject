@@ -22,6 +22,9 @@ def main():
 	plt.show()
 
 
+	#fig.savefig('./writeup/plot.eps', format='eps')
+
+
 
 def read_in_roc(path):
 	f = open(path,'r')

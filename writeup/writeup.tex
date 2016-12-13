@@ -1,6 +1,12 @@
 \documentclass{article}
 \usepackage{cite}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\newcommand\norm[1]{\left\lVert#1\right\rVert}
+\DeclareMathOperator*{\argmin}{arg\,min}
 
+\setlength{\parindent}{0cm}
+\setlength{\parskip}{0.25cm}
 
 \begin{document}
 \author{Max Horowitz-Gelb}
@@ -23,8 +29,15 @@ Due to the way training data for DBSI is aquired, standard active learning metho
 \section*{Methods}
 DBSI uses a support vector machine to classify residues. Such machine learning model has geometric properties that make applying active learning quite intuitive. 
 
-\subsection*{Non-Batch Active Learning SVM}
-When considering a standard binary classifier SVM as DBSI uses, our decision function is can be described by its training examples \cite{svm}:
+\subsection*{Non Batch-Style Active Learning SVM}
+Let us conside a standard binary classifier SVM as DBSI uses.
+Then we have a set of $n$ training examples
+$
+\{(x_1,y_1),...,(x_n, y_n)\} \subset (X \times \{-1,1\})^n
+$ where $X$ denotes our input space. 
+
+
+ as shown in \cite{svm}, our decision function can be described by its training examples,
 \[
 g(x) = \sum_{i=1}^{n} \alpha_i k( x_i, x)
 \]
@@ -33,21 +46,57 @@ and classifcation is simply the sign,
 	f(x) = sign(g(x))
 \]
 Where $x_i$ is the set of support vectors,
-$x$ is our vector we want to classify, $\alpha_i$ is a model parameter, and $k$ is our kernel function.
+$x$ is our vector we want to classify, $\alpha_i$ selects our support vectors, and $k$ is our kernel function.
 
-If our kernel satisfies Mercer's condition, it can be further rewritten \cite{active_learning}
+As shown in \cite{active_learning}, if our kernel $k$ satisfies Mercer's condition, then there exists a feature space $F$ and a map $\phi$ from $X$ to $F$, such that $k(x,x') = \langle \phi(x) , \phi(x') \rangle$, and we may rewrite our above equation as
+ 
+\[
+f(x) = sign(\langle w_{svm}, \phi(x) \rangle)
+\]
+\[
+w_{svm} = \sum_{i=1}^n \alpha_i \phi(x_i)
+\]
+where $w_{svm}$ is the normal vector of our hyperplane in feature space. 
+
+If we assume our training data is linearly separable in $F$ then there is exists a non-empty set
+\[
+V = \{w \in F | y_i \langle w, \phi(x_i) \rangle > 0 \text{ for } i = 1, ...,n \text{ and} \norm{w} = 1
+\]
+which we call our version space \cite{version_space}.
+
+Now let $Q \in X^m$ be our query pool that our active learner has access to and
+$l : X \rightarrow \{-1,1\}$ be a function giving the correct label of an instance of our query pool.
+
+Then at each step our active learner removes one instance $x_{n+1}$ from $Q$ and then adds it to our training set with the result
+\[
+\{(x_1, y_1),...,(x_n,y_n)\}\cup\{(x_{n+1}, l(x_{n+1})\}
+\]
 
 
-Then some shit about version spaces
-\cite{version_space}
+For an efficient learning we want an active learner who most rapidly decays the cardinality of $V$ as it adds individual examples to our training set. As shown in \cite{active_learning} we can guarantee a high decay in $|V|$ by querying the point closest to the hyperplane in feature space. So at each active learning query step we query
+\[
+x_{n+1} = \argmin_{x' \in Q} g(x')
+\]
+
+For active learning in a setting where we query one instance at a time, this works fairly well, but this is not the case in batch style active learning. 
+
+\subsection*{Batch-Style Active Learning}
+
+
+
+  
+
+
 
 
 
 
 \cite{active_learning}
 \section*{Results}
+\includegraphics[scale=0.5]{plot}
 \section*{Conclusion}
 
-\bibliography{mybib}{}
 \bibliographystyle{plain}
+\bibliography{mybib}{}
+
 \end{document}
