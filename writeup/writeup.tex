@@ -24,6 +24,24 @@ Due to the way training data for DBSI is aquired, standard active learning metho
 DBSI uses a support vector machine to classify residues. Such machine learning model has geometric properties that make applying active learning quite intuitive. 
 
 \subsection*{Non-Batch Active Learning SVM}
+When considering a standard binary classifier SVM as DBSI uses, our decision function is can be described by its training examples \cite{svm}:
+\[
+g(x) = \sum_{i=1}^{n} \alpha_i k( x_i, x)
+\]
+and classifcation is simply the sign,
+\[
+	f(x) = sign(g(x))
+\]
+Where $x_i$ is the set of support vectors,
+$x$ is our vector we want to classify, $\alpha_i$ is a model parameter, and $k$ is our kernel function.
+
+If our kernel satisfies Mercer's condition, it can be further rewritten \cite{active_learning}
+
+
+Then some shit about version spaces
+\cite{version_space}
+
+
 
 
 \cite{active_learning}

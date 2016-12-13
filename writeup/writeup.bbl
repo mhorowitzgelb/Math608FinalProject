@@ -1,5 +1,11 @@
 \begin{thebibliography}{1}
 
+\bibitem{svm}
+Scholkopf B and Smola AJ.
+\newblock Learning with kernels: Support vector machines, regularization,
+  optimization, and beyond.
+\newblock 2002.
+
 \bibitem{active_learning}
 Brinker K.
 \newblock Incorporating diversity in active learning with support vector
@@ -11,6 +17,11 @@ Brinker K.
 Sukamar S, Zhu X, Ericksen SS, and Mitchell JC.
 \newblock Dbsi server: Dna binding site identifier.
 \newblock {\em Bioinformatics}, 2016.
+
+\bibitem{version_space}
+Mitchel TM.
+\newblock Generalization as search.
+\newblock {\em Artifical Intelligence}, 18:203--226, 1982.
 
 \bibitem{dbsi}
 Zhu X, Ericksen E., and Mitchell JC.
