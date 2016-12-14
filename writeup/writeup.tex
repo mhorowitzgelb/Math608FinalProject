@@ -80,33 +80,33 @@ For active learning in a setting where one queries one instance at a time, this 
 
 \subsection*{Batch Style Active Learning}
 
-Batch-style active learning is very similar to standard active learning except now we remove multiple instances from the query pool at the same time. So for a batch size of $p$ we remove a query batch
-$B \in X^p | B \subset Q$.
+Batch style active learning is very similar to standard active learning, except now multiple instances are removed from the query pool at the same time before the model is retrained. So for a batch size of $p$ a batch
+$B \in X^p | B \subset Q$ is removed.
 
 
-Intuitively one might extrapolate from the single instance case of active learning and select $B$ to be the $p$ instances in $Q$ closest to the hyperplane. As shown in \cite{active_learning}, this turns out to be a naive approach since the points may be close and contain redundant information. A better solution is one that not only considers distance from the hyperplane but also diversity of the points. Diversity in this case is measured using the angle between the induced hyperplanes of two instances. The induced hyperplane $h$ of an instance $x$ is the hyperplane whose normal vector is orthogonal to $\phi(x)$. From \cite{active_learning} we can calculate angles between the induced hyperplanes of two instances $x_1$ and $x_2$ as
+Based off the single instance active learning strategy shown above, one might select $B$ to be the $p$ instances in $Q$ closest to the hyperplane in $F$. As shown in \cite{active_learning}, this turns out to be a naive approach. This is because the points may be clustered together in a small area of $F$ and, because of this, contain redundant information. A better solution is one that not only considers distance from the hyperplane but also diversity of the points in $F$. Diversity in this case is measured using the angle between the induced hyperplanes of two instances. The induced hyperplane $h$ of an instance $x$ is the hyperplane whose normal vector is orthogonal to $\phi(x)$. From \cite{active_learning} the angles between the induced hyperplanes of two instances $x_1$ and $x_2$ can be calculated as
 \[
 |cos(\angle(h_1, h_2))| = \frac{|k(x_1,x_2)|}{\sqrt{k(x_1,x_1)k(x_2, x_2)}}
 \]
 
-Then we can score each instance in $Q$ for its redundancy to in comparison to all other instances as
+Then each instance in $Q$ can be scored for its redundancy of information as
 \[
 r(x) = \max_{x' \in Q, x' \neq x} \frac{|k(x,x')|}{\sqrt{k(x,x)k(x', x')}}
 \]
 
-Then for each instance $x$ in the query pool we give it a score
+Then for each instance $x$ in the query pool a final score can be given
 \[
 s(x) = \lambda |g(x)| + (1- \lambda) r(x)
 \]
-where $\lambda$ is a weight parameter between $0$ and $1$ which controls how much priority we give to each sub-score. 
+where $\lambda$ is a weight parameter between $0$ and $1$ which controls how much priority is given to each sub-score. 
 
-Then for as described in \cite{active_learning}, we set our query batch $B$ equal to the $p$ instances in $Q$ with lowest scores or
+Then as described in \cite{active_learning}, the next query batch $B$ is to be the $p$ instances in $Q$ with lowest scores or
 \[
-B = \argmin_{b \in X^p, b \subset Q} \sum_{x \in b} s(x)
+B = \argmin_{b \in X^p : b \subset Q} \sum_{x \in b} s(x)
 \]
 
 \subsection*{Active Learning Used for DBSI}
-This batch-style method described above is slightly incompatible with DBSI since in \cite{active_learning} this method allows the active learner to create a query batch of any of the instances in the query pool. In the setting of DBSI, the batches are already predefined. Each instance is a member of a batch corresponding to the protein from which the instance came from. This is not a huge incompatibility. It only means that now the batches are pre-set and the active learner must score these batches instead of the individual instances. To do this, each batch is given a score
+The batch style method described above is slightly incompatible with DBSI since in \cite{active_learning} this method allows the active learner to create a query batch of any of the instances in $Q$. In the setting of DBSI, the batches are already predefined. Each instance is a member of a batch corresponding to the protein from which the instance came from. This is not a huge incompatibility. It only means that now the batches are pre-set and the active learner must score these batches instead of the individual instances. To do this, each batch is given a score
 \[
 s_{batch}(B) = \sum_{x \in I(B)} \lambda * (1- |g(x)|) + (1-\lambda) * (1 - r(x))
 \]
@@ -116,24 +116,25 @@ where $I(B)$ is the set of instances $\{x \in B : |g(x)| < 1\}$. Then at each qu
 \subsection*{Evaluation}
 To evaluate the active learning method described above, the training set of 263 proteins from \cite{dbsi_server} was divided into three sets. One was an initial training set of 100 proteins, one a query pool of 123 proteins and one test set of 40 proteins. Due to data in \cite{dbsi_server} being heavily modified over time, information of corresponding protein for each training instance was lost. To simulate having this information, all the training instances were divided equally into different batches, each of approximately 200 instances. Each batch simulated the existence of one protein. 
 
-For evaluation the same learning parameters were used as in \cite{dbsi_server}, the rbf kernel with $\gamma = 0.0008$. Then the SVM was fitted to the initial training set. Then the active learning method was applied for 123 steps until it had queried all the proteins in the query pool set. After each query step the new fitted SVM was evaluated against the test set using area under the ROC curve. 
+For evaluation the same learning parameters were used as in \cite{dbsi_server}, the rbf kernel with $\gamma = 0.0008$. As well the active learning parameter $\lambda$ was set to $0.5$, as this value was shown to perform the best in \cite{active_learning}.
 
-In order to have a baseline for comparison, this same process was run with a random query method instead of the active learning method. As its name implies this random query method queried proteins from the query pool set completely randomly without regard for the contents of each protein batch. 
+First the SVM was fitted to the initial training set. Then the active learning method was applied for 123 steps until it had queried all the proteins in the query pool set. After each query step the new fitted SVM was evaluated against the test set using area under the ROC curve. 
+
+In order to have a baseline for comparison, this same process was run with a random query method. As its name implies, this random query method queried proteins from the query pool set completely randomly without regard for the contents of each protein batch. 
 \subsection*{Performance}
 
 \includegraphics[scale=0.5]{plot}
 
-The above plot shows the increase in ROC score over time as each protein is queried for both the random and active learning methods. Though not by much, the active learner slightly out-paces the baseline. Of course both methods converge to the same ROC score of ~0.87. This is to be expected since at the end both methods have queried all of the proteins and generated the exact same model.   
-
+The above plot shows the results of the evaluation for both the active learner and the baseline. The y-axis represents the ROC score and the x-axis is the query step. Though not by much, the active learner slightly out-paces the baseline. Of course both methods converge to the same ROC score of ~0.87. This is to be expected since after the final query step, both methods would have queried all the proteins in the training pool meaning both corresponding SVMs saw all training examples.
 
 \section*{Conclusion}
-As shown above the active learning method shows slight improvement from the baseline. There are many possible reasons why the improvement was not as significant. Considering these reasons gives insights into future directions that could be taken.
+As shown above, the active learning method shows slight improvement from the baseline. Higher improvment would have been desired, but potential reasons for the observed results may prove to be helpful in taking future directions.
 
-The results seen may be extensively affected by the way the evaluation was performed. The evaluation was unrealistic because all the proteins had the same number of training instances. In a real environment different proteins would have vastly different sizes and as a result different numbers of contained training instances. In the future, evaluation on batches that correctly corresponded to real proteins would be beneficial. 
+The results observed may have been extensively affected by the way the evaluation was performed. The evaluation was unrealistic because all the proteins had the same number of training instances. In a real environment different proteins would have vastly different sizes and, as a result, different numbers of contained training instances. In the future, evaluation on batches that correctly corresponded to real proteins could be beneficial. 
 
-The size of the query pool could have also negatively affected the evaluation. In a real world scenario the active learner would have access to thousands of DNA-Protein complexes. With a more realistically sized query pool, the divergence between the ROC scores of the active learner and the baseline could possibly be much larger. 
+The size of the query pool could have also affected the evaluation. In a real world scenario the active learner would have access to thousands of DNA-Protein complexes. With a more realistically sized query pool, the divergence between the ROC scores of the active learner and the baseline could possibly have been much larger. 
 
-Probably the most important issue with the active learning method, though, is the assumption of linear separability. Because of the noisiness of the labelled data, this assumption is invalid. Because of this, the model cannot use a hard margin and some of the incentives for the scoring method in \cite{active_learning} are somewhat lost. Further work would need to be done in order to handle the loss of separability.
+Another potential culprit is the assumption of linear separability. The noisiness of the labelled data invalidates this assumption and hence, the model cannot use a hard margin SVM. Because of this, the intution of the scoring method in \cite{active_learning} is somewhat lost. Further work would need to be done to the scoring function order to handle the loss of separability. As well switching to a method that does not consider version spaces might be beneficial as well.
 
 \bibliographystyle{plain}
 \bibliography{mybib}{}
